@@ -1,3 +1,5 @@
+
+
 # mjdemetra
 Matlab function to perform seasonal adjustment with JDemetra+
 
@@ -39,7 +41,7 @@ at the beginning of the ```mjdemetra``` function so that the desired version of 
 
 The ```mjdemetra``` function can be used in many different ways. By default it plots the seasonally adjusted data (with confidence intervals only when the TramoSeats method is used) and highlights outliers. The seasonally adjusted series without removing calendar effects is also plotted.
 
-```
+```Matlab
         [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
         [sa, rslts]= mjdemetra2(data2,            'Method','X13'      );
         [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
@@ -47,4 +49,29 @@ The ```mjdemetra``` function can be used in many different ways. By default it p
         [sa, rslts]= mjdemetra2(data)
         [sa, rslts]= mjdemetra2(data,                                  ,'CalendarOption','RSA0')
         [sa, rslts]= mjdemetra2(data,                                                          , 'grafico',false)
+```
+
+Note that the only compulsory input is 'data', which is a TsData object of JDemetra+. The following code performs the following tasks:
+
+- Load the data from excel and create the TsData object (note the Java code runs in Matlab without any problem)
+
+```Matlab
+[x,dates]=xlsread('gdpQ','data');
+fechasExcel=dates(2:end,1)
+y=x(:,1)
+ 
+
+% define the dates
+datesVector = datevec(fechasExcel);
+firstYear= datesVector(1,1);
+
+% this is java code
+firstPeriod = ec.tstoolkit.timeseries.simplets.TsPeriod(ec.tstoolkit.timeseries.simplets.TsFrequency.Quarterly, firstYear, 0);
+data = ec.tstoolkit.timeseries.simplets.TsData(firstPeriod , y, false); 
+
+```
+- Perform the seasonal adjustment
+
+```Matlab
+[sa, rslts]= mjdemetra(data);  
 ```
