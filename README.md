@@ -1,6 +1,25 @@
 # mjdemetra
 Matlab function to perform seasonal adjustment with JDemetra+
 
+MJDemetra is a Matlab interface to JDemetra+, the seasonal adjustment
+software [officially
+recommended](https://ec.europa.eu/eurostat/cros/system/files/Jdemetra_%20release.pdf)
+to the members of the European Statistical System (ESS) and the European
+System of Central Banks. JDemetra+ implements the two leading seasonal
+adjustment methods
+[TRAMO/SEATS+](http://www.bde.es/bde/en/secciones/servicios/Profesionales/Programas_estadi/Programas_estad_d9fa7f3710fd821.html)
+and [X-12ARIMA/X-13ARIMA-SEATS](https://www.census.gov/srd/www/x13as/).
+
+Besides seasonal adjustment, JDemetra+ bundles other time series models
+that are useful in the production or analysis of economic statistics,
+including for instance outlier detection, [nowcasting](https://github.com/nbbrd/jdemetra-nowcasting/wiki), temporal
+disaggregation or benchmarking.
+
+For more details on the JDemetra+ software see
+<https://github.com/jdemetra/jdemetra-app>.
+
+MJDemetra offers access to some of the the seasonal adjustment options and outputs of JDemetra+.
+
 ## Installation
 
 - Make sure Matlab uses the appropiate Java version
