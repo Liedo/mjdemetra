@@ -22,7 +22,6 @@ MJDemetra offers access to some of the the seasonal adjustment options and outpu
 own purposes. Note that Matlab reads Java code, so you can run any JDemetra+ algorithm without the need to modify the syntax.
 
 ## Installation
-
 - Make sure Matlab uses the appropiate Java version
 (type ```version -java``` in Matlab to find out which version is used)
 Matlab should use a Java SE version that is [compatible with
@@ -57,10 +56,11 @@ An overview of the possible options is available [here](https://jdemetradocument
 The variables ```output``` and ```rslts``` contain all the information resulting from the seasonal adjustment. While ```rslts``` is a Java object of the class ```CompositeResults```, the ```output``` variable is a Matlab structure containing the seasonally adjusted data (sa) and the non-adjusted data (nsa)
 
 The ```mjdemetra``` function can be used in many different ways.  By default, the method 'TramoSeats' is used (with specification'RSAfull', unless otherwise stated.  Also a  graph is plotted by default, displaying the following information:
--  1) raw data
--  2) adjusted data
--  3) uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes parameter uncertainty
--  5) outliers (LS stands for Level Shift, OA stands for Aditive Outlier)
+-  raw data
+-  adjusted data (seasonality and calendar effects have been eliminated)
+-  adjusted data without removing calendar effects
+-  uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes parameter uncertainty
+-  outliers (LS stands for Level Shift, OA stands for Aditive Outlier)
 
 
 ## Example
