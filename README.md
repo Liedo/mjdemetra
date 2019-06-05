@@ -1,5 +1,3 @@
-
-
 # mjdemetra
 Matlab function to perform seasonal adjustment with JDemetra+
 
@@ -20,38 +18,54 @@ disaggregation or benchmarking.
 For more details on the JDemetra+ software see
 <https://github.com/jdemetra/jdemetra-app>.
 
-MJDemetra offers access to some of the the seasonal adjustment options and outputs of JDemetra+.
+MJDemetra offers access to some of the the seasonal adjustment options and outputs of JDemetra+. Feel free to modify it for your
+own purposes. Note that Matlab reads Java code, so you can run any JDemetra+ algorithm without the need to modify the syntax.
 
 ## Installation
 
 - Make sure Matlab uses the appropiate Java version
 (type ```version -java``` in Matlab to find out which version is used)
 Matlab should use a Java SE version that is [compatible with
-JDemetra+](https://github.com/jdemetra/jdemetra-app) 
+JDemetra+](https://github.com/jdemetra/jdemetra-app). Check with your IT department, since you may not have admistrative rights to modify the Java version used by Matlab. 
 
 - Edit the ```classpath.txt``` file (type ```which classpath.txt``` in Matlab to find its location)
 and make  sure the paths containing your .jar libraries are listed. For example, 
 my ```classpath.txt``` file includes the path where the java compiled sofware of JDemetra+ is included:
 ```L:\DSXNPAPER\Project 2017\R model\models\JDinMATLAB\demetra-tstoolkit-2.2.2.jar```
-If you don't want to modify the ```classpath.txt``` file because you are using sofware that relies on older Java versions, then            add the line:
+
+- If you don't want to modify the ```classpath.txt``` file because you are using sofware that relies on older Java versions, then            add the line:
 ```javaclasspath('L:\DSXNPAPER\Project 2017\R model\models\JDinMATLAB\')``` 
 at the beginning of the ```mjdemetra``` function so that the desired version of Java is used only within within the function.
 
-## Example
 
-The ```mjdemetra``` function can be used in many different ways. By default it plots the seasonally adjusted data (with confidence intervals only when the TramoSeats method is used) and highlights outliers. The seasonally adjusted series without removing calendar effects is also plotted.
+## Use
+
+To use the function you just need to input the 'data', which is a TsData object of JDemetra+. The remaining input arguments are not compulsory and they do not necessarily have to be introduced in order.
 
 ```Matlab
-        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
-        [sa, rslts]= mjdemetra2(data2,            'Method','X13'      );
-        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
-        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
-        [sa, rslts]= mjdemetra2(data)
-        [sa, rslts]= mjdemetra2(data,                                  ,'CalendarOption','RSA0')
-        [sa, rslts]= mjdemetra2(data,                                                          , 'grafico',false)
+        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
+        [output, rslts]= mjdemetra2(data2,            'Method','X13'      );
+        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
+        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
+        [output, rslts]= mjdemetra2(data)
+        [output, rslts]= mjdemetra2(data,                                  ,'CalendarOption','RSA0')
+        [output, rslts]= mjdemetra2(data,                                                          , 'plot',false)
 ```
 
-Note that the only compulsory input is 'data', which is a TsData object of JDemetra+. The following code performs the following tasks:
+An overview of the possible options is available [here](https://jdemetradocumentation.github.io/JDemetra-documentation/pages/reference-manual/sa-specifications.html). 
+
+The variables ```output``` and ```rslts``` contain all the information resulting from the seasonal adjustment. While ```rslts``` is a Java object of the class ```CompositeResults```, the ```output``` variable is a Matlab structure containing the seasonally adjusted data (sa) and the non-adjusted data (nsa)
+
+The ```mjdemetra``` function can be used in many different ways.  By default, the method 'TramoSeats' is used (with specification'RSAfull', unless otherwise stated.  Also a  graph is plotted by default, displaying the following information:
+-  1) raw data
+-  2) adjusted data
+-  3) uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes parameter uncertainty
+-  5) outliers (LS stands for Level Shift, OA stands for Aditive Outlier)
+
+
+## Example
+
+The following code performs the following tasks:
 
 - Load the data from excel and create the TsData object (note the Java code runs in Matlab without any problem)
 
@@ -64,7 +78,7 @@ y=x(:,1)
 % define the dates
 datesVector = datevec(fechasExcel);
 firstYear= datesVector(1,1);
-
+firstQuarter= 0; % 0 is the first Quarter (in Java you start counting from 0 and not from 1) 
 % this is java code
 firstPeriod = ec.tstoolkit.timeseries.simplets.TsPeriod(ec.tstoolkit.timeseries.simplets.TsFrequency.Quarterly, firstYear, 0);
 data = ec.tstoolkit.timeseries.simplets.TsData(firstPeriod , y, false); 
