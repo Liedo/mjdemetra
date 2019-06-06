@@ -30,10 +30,10 @@ JDemetra+](https://github.com/jdemetra/jdemetra-app). Check with your IT departm
 - Edit the ```classpath.txt``` file (type ```which classpath.txt``` in Matlab to find its location)
 and make  sure the paths containing your .jar libraries are listed. For example, 
 my ```classpath.txt``` file includes the path where the java compiled sofware of JDemetra+ is included:
-```L:\DSXNPAPER\Project 2017\R model\models\JDinMATLAB\demetra-tstoolkit-2.2.2.jar```
+```L:\...yourFolder....\demetra-tstoolkit-2.2.2.jar```. The last release of the ```jar``` file can be found [here](https://github.com/jdemetra/jdemetra-core/releases)
 
 - If you don't want to modify the ```classpath.txt``` file because you are using sofware that relies on older Java versions, then            add the line:
-```javaclasspath('L:\DSXNPAPER\Project 2017\R model\models\JDinMATLAB\')``` 
+```javaclasspath('L:\...yourFolder....\JDinMATLAB\')``` 
 at the beginning of the ```mjdemetra``` function so that the desired version of Java is used only within within the function.
 
 
