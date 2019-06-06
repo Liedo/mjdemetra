@@ -42,13 +42,13 @@ at the beginning of the ```mjdemetra``` function so that the desired version of 
 To use the function you just need to input the 'data', which is a TsData object of JDemetra+. The remaining input arguments are not compulsory and they do not necessarily have to be introduced in order.
 
 ```Matlab
-        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
-        [output, rslts]= mjdemetra2(data2,            'Method','X13'      );
-        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
-        [output, rslts]= mjdemetra2(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
-        [output, rslts]= mjdemetra2(data)
-        [output, rslts]= mjdemetra2(data,                                  ,'CalendarOption','RSA0')
-        [output, rslts]= mjdemetra2(data,                                                          , 'plot',false)
+        [output, rslts]= mjdemetra(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
+        [output, rslts]= mjdemetra(data2,            'Method','X13'      );
+        [output, rslts]= mjdemetra(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
+        [output, rslts]= mjdemetra(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
+        [output, rslts]= mjdemetra(data)
+        [output, rslts]= mjdemetra(data,                                  ,'CalendarOption','RSA0')
+        [output, rslts]= mjdemetra(data,                                                          , 'plot',false)
 ```
 
 An overview of the possible options is available [here](https://jdemetradocumentation.github.io/JDemetra-documentation/pages/reference-manual/sa-specifications.html). 
