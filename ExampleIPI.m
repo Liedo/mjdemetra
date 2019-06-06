@@ -26,14 +26,15 @@ display(data) % you can print it in your command window but you cannot plot it, 
 %%  Seasonal Adjustment with JDemetra+
 %   This function will take the TsData object as an input and produce the
 %   seasonal adjusted data (sa) as an output that can be read in Matlab
-[output, rslts]= mjdemetra(data); % this works, apparently by pure chance
+
+[output, rslts]= mjdemetra(data); % It will run TramoSeats (with RSAfull option) and plot results
  
  
-[output, rslts]= mjdemetra(data,'Method','X13'); % this doesn't
+[output, rslts]= mjdemetra(data,'Method','X13'); % this will run X13 (with RSAfull option) and plot results
  
  
-[output, rslts]= mjdemetra(data,'Method','X13','CalendarOption','RSA2C'); % this doesn't
+[output, rslts]= mjdemetra(data,'Method','X13','CalendarOption','RSA2C'); % this will run X13 (with RSA2C option) and plot results
  
 tic
-[output, rslts]= mjdemetra(data,'plot',false); % this doesn't
+[output, rslts]= mjdemetra(data,'plot',false); % this doesn't make the plot, and runs the default method/option
 toc
