@@ -62,7 +62,6 @@ The ```mjdemetra``` function can be used in many different ways.  By default, th
 -  uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes parameter uncertainty
 -  outliers (LS stands for Level Shift, OA stands for Aditive Outlier)
 
-
 ## Example
 
 The following code performs the following tasks:
@@ -89,3 +88,16 @@ data = ec.tstoolkit.timeseries.simplets.TsData(firstPeriod , y, false);
 ```Matlab
 [sa, rslts]= mjdemetra(data);  
 ```
+
+
+### Figure: JDemetra+ seasonal adjustmentwith TramoSeats-RSAfull 
+<img src="TramoSeats.png" style="display: block; margin: auto;" />
+
+The data adjusted for seasonality and calendar effects is displayed in blue. The uncertainty around the seasonally adjusted data is displayed with a cyan shade around the blue line. Although in this example the uncertainty does not change much over time, one typically finds a slightly broader confidence bound at the end of the sample period. In this particular example, the increase in the uncertainty is only visible over the forecasting horizon. 
+
+### Figure: Zoom 
+
+<img src="TramoSeatsZoom.png" style="display: block; margin: auto;" />
+
+If you zoom in, you can have a closer look at the differences between the *data adjusted for seasonality and calendar effects* (blue) and the *data adjusted for seasonality alone* (magenta dotted line)
+
