@@ -1,5 +1,4 @@
 # mjdemetra
-[![Downloads](https://img.shields.io/github/downloads/liedo/mjdemetra/total.svg)](https://github.com/liedo/mjdemetra/releases/latest)
 
 Matlab function to perform seasonal adjustment with JDemetra+ ([latest release](https://github.com/liedo/mjdemetra/releases/latest))
 
