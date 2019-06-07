@@ -1,5 +1,7 @@
 # mjdemetra
-Matlab function to perform seasonal adjustment with JDemetra+
+[![Downloads](https://img.shields.io/github/downloads/liedo/mjdemetra/total.svg)](https://github.com/liedo/mjdemetra/releases/latest)
+
+Matlab function to perform seasonal adjustment with JDemetra+ ([latest release](https://github.com/liedo/mjdemetra/releases/latest))
 
 MJDemetra is a Matlab interface to JDemetra+, the seasonal adjustment
 software [officially
