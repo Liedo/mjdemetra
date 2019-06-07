@@ -24,15 +24,22 @@ MJDemetra offers access to some of the the seasonal adjustment options and outpu
 own purposes. Note that Matlab reads Java code, so you can run any JDemetra+ algorithm without the need to modify the syntax.
 
 ## Installation
+
+- Find the file ```demetra-tstoolkit-X.X.X.jar``` [here](https://github.com/jdemetra/jdemetra-core/releases) and copy it to your working directory or to a path that can be recognized by Matlab. This ```jar``` file contains the compiled packages with the core algorithms of JDemetra+.
+
 - Make sure Matlab uses the appropiate Java version
 (type ```version -java``` in Matlab to find out which version is used)
 Matlab should use a Java SE version that is [compatible with
-JDemetra+](https://github.com/jdemetra/jdemetra-app). Check with your IT department, since you may not have admistrative rights to modify the Java version used by Matlab. 
+JDemetra+](https://github.com/jdemetra/jdemetra-app). You may not have the administrative rights to modify the system environment, but you can modify the local environment. For example, in Windows 10 you can search for the key word *environment* and select the second option: 
+<img src="environment.png" style="display: block; margin: auto;" />
+
+- Once you have accessed your local environment, select ```MATLAB_JAVA``` and define the location of the version of Java that is compatible with the version you want to use of JDemetra+ 
+<img src="matlabJava.png" style="display: block; margin: auto;" />
 
 - Edit the ```classpath.txt``` file (type ```which classpath.txt``` in Matlab to find its location)
 and make  sure the paths containing your .jar libraries are listed. For example, 
 my ```classpath.txt``` file includes the path where the java compiled sofware of JDemetra+ is included:
-```L:\...yourFolder....\demetra-tstoolkit-2.2.2.jar```. The last release of the ```jar``` file can be found [here](https://github.com/jdemetra/jdemetra-core/releases)
+```L:\...yourFolder....\demetra-tstoolkit-2.2.2.jar```.
 
 - If you don't want to modify the ```classpath.txt``` file because you are using sofware that relies on older Java versions, then            add the line:
 ```javaclasspath('L:\...yourFolder....\JDinMATLAB\')``` 
