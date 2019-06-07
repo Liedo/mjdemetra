@@ -64,11 +64,11 @@ An overview of the possible options is available [here](https://jdemetradocument
 
 The variables ```output``` and ```rslts``` contain all the information resulting from the seasonal adjustment. While ```rslts``` is a Java object of the class ```CompositeResults```, the ```output``` variable is a Matlab structure containing the seasonally adjusted data (sa) and the non-adjusted data (nsa)
 
-The ```mjdemetra``` function can be used in many different ways.  By default, the method 'TramoSeats' is used (with specification'RSAfull', unless otherwise stated.  Also a  graph is plotted by default, displaying the following information:
+The ```mjdemetra``` function can be used in many different ways.  By default, the method 'TramoSeats' is used (with specification ```RSAfull```), unless otherwise stated.  Also a  graph is plotted by default, displaying the following information:
 -  raw data
 -  adjusted data (seasonality and calendar effects have been eliminated)
 -  adjusted data without removing calendar effects
--  uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes parameter uncertainty
+-  uncertainty around the seasonally adjusted data (and forecasts): it is based on an approximation  of the uncertainty around  the linearized data and it excludes uncertainty stemming from parameter estimation.
 -  outliers (LS stands for Level Shift, OA stands for Aditive Outlier)
 
 ## Example
