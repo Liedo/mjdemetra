@@ -42,7 +42,7 @@ my ```classpath.txt``` file includes the path where the java compiled sofware of
 ```L:\...yourFolder....\demetra-tstoolkit-2.2.2.jar```.
 
 - If you don't want to modify the ```classpath.txt``` file because you are using sofware that relies on older Java versions, then            add the line:
-```javaclasspath('L:\...yourFolder....\JDinMATLAB\')``` 
+```javaclasspath('L:\...yourFolder...')``` 
 at the beginning of the ```mjdemetra``` function so that the desired version of Java is used only within within the function.
 
 
