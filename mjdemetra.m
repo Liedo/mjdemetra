@@ -210,7 +210,10 @@ end
 %% Forecasts and estimation uncertainty
 if  strcmp(saMethod,'TramoSeats')
 
+    
     % Adjusted data
+    % You can find the whole list of outputs you can get with the getData function
+    % https://jdemetradocumentation.github.io/JDemetra-documentation/pages/theory/output.html
     adjusted = rslts.getData('sa', data.getClass());
     T=adjusted.getLength();
 
@@ -223,26 +226,44 @@ if  strcmp(saMethod,'TramoSeats')
      end
         
     % SA data F
-    saTsF = rslts.getData('decomposition.sa_lin_f', data.getClass());
-    saTsF_se = rslts.getData('decomposition.sa_lin_ef', data.getClass());
+    %saTsF = rslts.getData('decomposition.sa_lin_f', data.getClass());
+    saTsF = rslts.getData('sa_f', data.getClass()); % not corrected for outliers (otherwise the graph is confusing because we dont show the linearlized series)
+    saTsF_se = rslts.getData('decomposition.sa_lin_ef', data.getClass()); % the standard errors are only for the linearized series
+    
     saF    = nan(T+horizon,1);     %  initialization with NAN
     saF_se = nan(T+horizon,1);     %  initialization with NAN
     
+    
+    if isempty(saTsF_se)
+       display(['The model is multimplicative? ' ,string(multiplicative)]) 
+       display(['decomposition.sa_lin_ef is empty']) 
+    end
+    
+    
     if multiplicative
+        
+        
+            for i=T:(T+horizon-1)
+            saF(i+1,1)= saTsF.get(i-T)   ;        
+            temp      = saTsF_se.get(i-T);
+            saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            end
+
          
-        for i=T:(T+horizon-1)
-        saF(i+1,1)= saTsF.get(i-T);
-        temp      = saTsF_se.get(i-T);
-        saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
-        end
     
     else
-        for i=T:(T+horizon-1)
-        saF(i+1,1)= saTsF.get(i-T);
-       % temp      = saTsF_se.get(i-T);
-       % saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
-        saF_se(i+1,1)=saTsF_se.get(i-T);
-        end
+        
+        
+            
+            for i=T:(T+horizon-1)
+            saF(i+1,1)= saTsF.get(i-T);
+           % temp      = saTsF_se.get(i-T);
+           % saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            saF_se(i+1,1)=saTsF_se.get(i-T);
+            end
+         
+            
+        
         
     end
 
@@ -251,7 +272,11 @@ if  strcmp(saMethod,'TramoSeats')
     saTs_se = rslts.getData('decomposition.sa_lin_e', data.getClass());    
     ycalTs = rslts.getData('ycal', data.getClass());
  
-
+    if isempty(saTs_se)
+       display(['The model is multimplicative? ' ,string(multiplicative)]) 
+       display(['decomposition.sa_lin_e is empty']) 
+    end
+    
     ycal   = nan(T+horizon,1); 
     adj   = nan(T+horizon,1);     %  initialization with NAN
     adj2_F   = nan(T+horizon,1);     %  initialization with NAN
@@ -261,13 +286,17 @@ if  strcmp(saMethod,'TramoSeats')
 
     if multiplicative
         
-        for i=0:T-1
-        adj(i+1,1)  =adjusted.get(i);
-        sa(i+1,1)   =saTs.get(i);
-        temp        =saTs_se.get(i);
-        sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
-        ycal(i+1,1) = (ycalTs.get(i));
-        end
+        
+         
+        
+            for i=0:T-1
+            adj(i+1,1)  =adjusted.get(i);
+            sa(i+1,1)   =saTs.get(i);
+            temp        =saTs_se.get(i);
+            sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
+            ycal(i+1,1) = (ycalTs.get(i));
+            end
+        
     
         adj2  = exp(sa);
         adj2U = adj2 + 2*sa_se;
@@ -277,22 +306,27 @@ if  strcmp(saMethod,'TramoSeats')
         adj2U_F   = adj2_F + 2*saF_se;
         adj2L_F   = adj2_F - 2*saF_se;
 
-    else
-        for i=0:T-1
-        adj(i+1,1)  =adjusted.get(i);
-        sa(i+1,1)   =saTs.get(i);
-        %temp        =saTs_se.get(i);
-        %sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
-        sa_se(i+1,1)=saTs_se.get(i);
-        ycal(i+1,1) =ycalTs.get(i);
-        end
-    
+    else  % non multiplicative
+        
+             
+            for i=0:T-1
+            adj(i+1,1)  =adjusted.get(i);
+            sa(i+1,1)   =saTs.get(i);
+            %temp        =saTs_se.get(i);
+            %sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
+            sa_se(i+1,1)=saTs_se.get(i);
+            ycal(i+1,1) =ycalTs.get(i);
+            end
+       
+        
+        
         %adj2  = exp(sa);
         adj2  = sa;
         adj2U = adj2 + 2*sa_se;
         adj2L = adj2 - 2*sa_se;
-
-        adj2_F  = exp(saF);
+        
+        %adj2_F  =  exp(saF) ;
+        adj2_F  =  saF ;
         adj2U_F   = adj2_F + 2*saF_se;
         adj2L_F   = adj2_F - 2*saF_se;
 
@@ -466,6 +500,7 @@ if  strcmp(saMethod,'TramoSeats')
      plot(tiempo00,nsaF,'--','Color',[0.6 0.6 0.6])  
      datetick('x', timeFormat);
      title(['JD+ adjustment with TRAMO-SEATS-',p.Results.CalendarOption])
+     grid minor
 %         tiempo00,ts.Data(:,3),'c',... % linearised series (remove; confusing for the user)
     
     
