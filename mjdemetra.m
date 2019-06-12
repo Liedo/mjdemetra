@@ -226,10 +226,11 @@ if  strcmp(saMethod,'TramoSeats')
      end
         
     % SA data F
-    %saTsF = rslts.getData('decomposition.sa_lin_f', data.getClass());
+    saTsF_lin = rslts.getData('decomposition.sa_lin_f', data.getClass());
     saTsF = rslts.getData('sa_f', data.getClass()); % not corrected for outliers (otherwise the graph is confusing because we dont show the linearlized series)
     saTsF_se = rslts.getData('decomposition.sa_lin_ef', data.getClass()); % the standard errors are only for the linearized series
     
+    saF_lin    = nan(T+horizon,1);     %  initialization with NAN
     saF    = nan(T+horizon,1);     %  initialization with NAN
     saF_se = nan(T+horizon,1);     %  initialization with NAN
     
@@ -244,9 +245,11 @@ if  strcmp(saMethod,'TramoSeats')
         
         
             for i=T:(T+horizon-1)
+            saF_lin(i+1,1)= saTsF_lin.get(i-T) ;
             saF(i+1,1)= saTsF.get(i-T)   ;        
             temp      = saTsF_se.get(i-T);
-            saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            %saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF_lin(i+1,1));
             end
 
          
@@ -302,7 +305,8 @@ if  strcmp(saMethod,'TramoSeats')
         adj2U = adj2 + 2*sa_se;
         adj2L = adj2 - 2*sa_se;
 
-        adj2_F  = exp(saF);
+       % adj2_F  = exp(saF);% bug corrected
+        adj2_F  = saF;
         adj2U_F   = adj2_F + 2*saF_se;
         adj2L_F   = adj2_F - 2*saF_se;
 
