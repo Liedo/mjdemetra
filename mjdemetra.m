@@ -21,8 +21,10 @@ function [output,rslts]= mjdemetra(data,varargin)
 % 
 % [double array (Matlab) with s. adjusted data                  ] output.sa
 % [double array (Matlab) with non adjusted data                 ] output.nsa
+% [double array (Matlab) with non adjusted forecasts            ] output.Fnsa
 % [timeseries (Matlab) with s. adjusted data + outliers info    ] output.saTs
 % [timeseries (Matlab) with non adjusted data                   ] output.nsaTs
+% [timeseries (Matlab) with non adjusted forecasts              ] output.FnsaTs
 % [timeseries (Matlab) with 'linearised adjusted series' and
 %  a measure of the uncertainty around it; only for TramoSeats &
 %  excludes parameter uncertainty: data, upperbound, lowerbound] output.saLinTs/saLinTsF 
@@ -44,13 +46,13 @@ function [output,rslts]= mjdemetra(data,varargin)
 %%                                        Param1          Param2                       Param3
 % Examples:                            __________   __________________      ______________________
 %                                     /          \ /                  \    /                      \
-%        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
-%        [sa, rslts]= mjdemetra2(data2,            'Method','X13'      );
-%        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
-%        [sa, rslts]= mjdemetra2(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
-%        [sa, rslts]= mjdemetra2(data)
-%        [sa, rslts]= mjdemetra2(data,                                  ,'CalendarOption','RSA0')
-%        [sa, rslts]= mjdemetra2(data,                                                          , 'plot',false)
+%        [sa, rslts]= mjdemetra(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
+%        [sa, rslts]= mjdemetra(data2,            'Method','X13'      );
+%        [sa, rslts]= mjdemetra(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSA5')
+%        [sa, rslts]= mjdemetra(data,'horizon',20,'Method','X13'       ,'CalendarOption','RSA5c')
+%        [sa, rslts]= mjdemetra(data)
+%        [sa, rslts]= mjdemetra(data,                                  ,'CalendarOption','RSA0')
+%        [sa, rslts]= mjdemetra(data,                                                          , 'plot',false)
 %
 % By default, the method 'TramoSeats' is used (with specification'RSAfull', unless otherwise stated)
 % By default, a graph is plotted with 
@@ -82,7 +84,7 @@ function [output,rslts]= mjdemetra(data,varargin)
 %
 % Code written by David de Antonio Liedo
 % Feel free to modify this function or create alternative outputs
-% Dont' hesitate to contact me if you need assistance 
+% Don't hesitate to contact me if you need assistance 
 % Contact email: david.deantonioliedo@nbb.be
 % Github       : https://github.com/Liedo
 
@@ -141,6 +143,7 @@ if ~isempty(p.UsingDefaults)
 end
  
 
+%% Here's where the seasonal adjustment happens
 if strcmp(saOption,'RSAX11') | strcmp(saOption,'RSA2c')| strcmp(saOption,'RSA4c')| strcmp(saOption,'RSA5c')
         saOptionJD = ec.satoolkit.x13.X13Specification.fromString(saOption);
         rslts = ec.satoolkit.algorithm.implementation. ...
@@ -160,6 +163,8 @@ else %saMethod=='TramoSeats'
         rslts = ec.satoolkit.algorithm.implementation. ...
             TramoSeatsProcessingFactory.process(data, saOptionJD);
 end
+
+
 
 
 %%  Outliers Identification
@@ -210,6 +215,13 @@ if  strcmp(saMethod,'TramoSeats')
     T=adjusted.getLength();
 
 
+    % Non SA F
+    nsaTsF = rslts.getData('y_f', data.getClass());  
+    nsaF    = nan(T+horizon,1);     %  initialization with NAN
+     for i=T:(T+horizon-1)
+        nsaF(i+1,1)= nsaTsF.get(i-T);
+     end
+        
     % SA data F
     saTsF = rslts.getData('decomposition.sa_lin_f', data.getClass());
     saTsF_se = rslts.getData('decomposition.sa_lin_ef', data.getClass());
@@ -406,25 +418,56 @@ if  strcmp(saMethod,'TramoSeats')
    
 
   if grafico 
+   % values to add shades in the graph
+    
+   idx=find(isnan(tsCI.Data(:,1)));
+   idx1=idx(1)-1;
+   x=tiempo00(1:idx1)';
+   y1=tsCI.Data(1:idx1,1)';
+   y2=tsCI.Data(1:idx1,2)';
+   
+   idx=find(isnan(tsCI.Data(:,3)));
+   idx1=idx(end)+1;
+   xF=tiempo00(idx1:end)';
+   y1F=tsCI.Data(idx1:end,3)';
+   y2F=tsCI.Data(idx1:end,4)';
+
+
+   % the graph
+    
    figure
-     plot(ts_adj,'.-b'),  datetick('x', timeFormat), xlabel('time'),title(['JD+ adjustment with TRAMO-SEATS-',p.Results.CalendarOption]);
-    hold on
-    % too complicated: use tiempo00 instead
-    plot(tiempo00,ts.Data(:,1),'k',... % datenum(fechas,'mm-yyyy'),ts.Data(:,2),'b.-',...        
-         tiempo00,adj+rawData-ycal ,'m:',... 
-         tiempo00,tsCI.Data(:,1),'b:',...
-         tiempo00,tsCI.Data(:,2),'b:',...
-         tiempo00,tsCI.Data(:,3),'b:',...
-         tiempo00,tsCI.Data(:,4),'b:',...
-         tiempo00,mean(tsCI.Data(:,3:4),2),'b')
-         legend('Tramo-Seats SA  & Cal','raw','Tramo-Seats SA')
-    datetick('x', timeFormat);
+     plot(ts_adj,'.-b'), datetick('x', timeFormat), xlabel('time');
+     hold on
+     plot(tiempo00,ts.Data(:,1),'Color',[0.6 0.6 0.6]) % datenum(fechas,'mm-yyyy'),ts.Data(:,2),'b.-',...        
+     hold on         
+     plot(tiempo00,adj+rawData-ycal ,'m')           
+     legend('Tramo-Seats Seasonal & Calendar adjusted','NSA data','Tramo-Seats SA')
+     hold on
+     fill([x fliplr(x)],[y1 fliplr(y2)],[0 1 1],'LineStyle','none')
+     hold on
+     fill([xF fliplr(xF)],[y1F fliplr(y2F)],[0 1 1],'LineStyle','none')   
+     hold on
+     plot(tiempo00,mean(tsCI.Data(:,3:4),2),'b')
+     hold on
+     plot(ts_adj,'.-b'),  datetick('x', timeFormat)%, xlabel('time'),title(['JD+ adjustment with TRAMO-SEATS-',p.Results.CalendarOption]);
+     hold on
+     plot(tiempo00,adj+rawData-ycal ,'m:','LineWidth',1) 
+     hold on
+     plot(tiempo00,ts.Data(:,1),'Color',[0.6 0.6 0.6])
     hold on
      if nout>0       
-      text( dateOutlier  ,ts_adj.Data(indice,1),oType,'Color','red')     
+      text( dateOutlier  ,ts_adj.Data(indice,1),oType,'Color','yellow','BackgroundColor','red')     
      end
+     hold on
+     plot(ts_adj,'.-b')
+     hold on          
+     plot(tiempo00,ts.Data(:,1),'Color',[0.6 0.6 0.6]) % datenum(fechas,'mm-yyyy'),ts.Data(:,2),'b.-',...        
+     hold on
+     plot(tiempo00,nsaF,'--','Color',[0.6 0.6 0.6])  
+     datetick('x', timeFormat);
+     title(['JD+ adjustment with TRAMO-SEATS-',p.Results.CalendarOption])
 %         tiempo00,ts.Data(:,3),'c',... % linearised series (remove; confusing for the user)
-    grid minor
+    
     
   end
 %    dateOutlier
@@ -499,14 +542,14 @@ else
      figure
      plot(ts_adj,'.-b'),  datetick('x', timeFormat), xlabel('time'),title(['JD+ adjustment with X13-',p.Results.CalendarOption]);
      hold on
-     plot( tiempo00 , rawData   ,'k') , datetick('x', timeFormat)
+     plot( tiempo00 , rawData   ,'Color',[0.6 0.6 0.6]) , datetick('x', timeFormat)
      hold on
      plot( tiempo00 , adj+rawData-ycal   ,'m:') , datetick('x', timeFormat)
      if nout>0
          hold on %     
-         text( dateOutlier  ,ts_adj.Data(indice,1),oType,'Color','red')     
+         text( dateOutlier  ,ts_adj.Data(indice,1),oType,'Color','yellow','BackgroundColor','red')     
      end
-     legend('X13 SA  & Cal','raw','X13 SA')
+     legend('X13 Seasonal & Calendar adjusted','NSA Data','X13 SA')
      datetick('x', timeFormat);
      
     end
@@ -517,8 +560,8 @@ end
     
 %% outputs
 output.sa=adj;
+output.sa_noCal=adj+rawData-ycal;
 output.nsa=rawData;
-
 output.saTs=ts_adj;
 
 output.nsaTs=timeseries(rawData,tiempo00);
@@ -529,6 +572,8 @@ saLin_with_bounds=[adj2 adj2U  adj2L ];
 output.saLinTs=timeseries(saLin_with_bounds,tiempo00);
 saLin_with_boundsF=[(adj2U_F+adj2L_F)/2 adj2U_F  adj2L_F ]; 
 output.saLinFTsF=timeseries(saLin_with_bounds,tiempo00);
-
+output.FnsaTs=timeseries(nsaF,tiempo00);% forecasts of non-adjusted data
+output.FnsaTs.TimeInfo.Format=timeFormat;
+output.Fnsa=nsaF; % forecasts of non-adjusted data
 end
 
