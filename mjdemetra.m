@@ -7,8 +7,12 @@ function [output,rslts]= mjdemetra(data,varargin)
 % [CLASS                                            ][ARGUMENT NAME]
 %  -------------------------------------------------  ---------------------
 % [TsData (JD+)                                     ] data
-% [string (Matlab)  -maybe this is better           ] option
+% [char (Matlab)                                    ] Method 
+% [char (Matlab)                                    ] CalendarOption
+% [char (Matlab)                                    ] eMethod 
+% [logical (Matlab)                                 ] plot
 % [integer (Matlab)                                 ] forecastHorizon
+%
 %
 % https://blogs.mathworks.com/loren/2009/05/05/nice-way-to-set-function-defaults/
 %
@@ -43,7 +47,7 @@ function [output,rslts]= mjdemetra(data,varargin)
 %         uncomment this line:
 %         javaclasspath('L:\DSXNPAPER\Project 2017\R model\models\JDinMATLAB\')
 % 
-%%                                        Param1          Param2                       Param3
+%%                                        Param1          Param2                       Param3   ...
 % Examples:                            __________   __________________      ______________________
 %                                     /          \ /                  \    /                      \
 %        [sa, rslts]= mjdemetra(data,'horizon',20,'Method','TramoSeats','CalendarOption','RSAfull')
@@ -53,6 +57,7 @@ function [output,rslts]= mjdemetra(data,varargin)
 %        [sa, rslts]= mjdemetra(data)
 %        [sa, rslts]= mjdemetra(data,                                  ,'CalendarOption','RSA0')
 %        [sa, rslts]= mjdemetra(data,                                                          , 'plot',false)
+%        [sa, rslts]= mjdemetra(data,                                                                        , 'eMethod','KalmanSmoother')
 %
 % By default, the method 'TramoSeats' is used (with specification'RSAfull', unless otherwise stated)
 % By default, a graph is plotted with 
@@ -115,6 +120,10 @@ addParameter(p,'horizon',defaultHorizon,@isnumeric);
 defaultPlot=true ;% 12 months, 12 years, 12 quarters...
 addParameter(p,'plot',defaultPlot,@islogical);
 
+eMethod_default = 'Burman';
+valid_eMethods = {'KalmanSmoother','Burman','McElroyMatrix'};
+check_eMethods = @(x) any(validatestring(x,valid_eMethods));
+addParameter(p,'eMethod',eMethod_default,check_eMethods);
  
 
 p.KeepUnmatched = true;
@@ -127,6 +136,7 @@ horizon=p.Results.horizon; % parameter
 saMethod=p.Results.Method; % optional
 saOption=p.Results.CalendarOption; % optional 
 grafico = p.Results.plot ;
+eMethod = p.Results.eMethod;
 
 disp('...........................................................................')
 disp(['Seasonal Adjustment Method: ',p.Results.Method])
@@ -160,11 +170,38 @@ elseif  strcmp(saMethod,'X13')
 else %saMethod=='TramoSeats'
         saOptionJD = ec.satoolkit.tramoseats.TramoSeatsSpecification.fromString(saOption);
         saOptionJD.getSeatsSpecification().setPredictionLength(horizon);
-        rslts = ec.satoolkit.algorithm.implementation. ...
+        %--------    
+
+        KalmanSmoother=javaMethod('valueOf','ec.satoolkit.seats.SeatsSpecification$EstimationMethod', 'KalmanSmoother');
+        Burman=javaMethod('valueOf','ec.satoolkit.seats.SeatsSpecification$EstimationMethod', 'Burman');
+        McElroyMatrix=javaMethod('valueOf','ec.satoolkit.seats.SeatsSpecification$EstimationMethod', 'McElroyMatrix');
+
+        if strcmp(eMethod,'KalmanSmoother')
+        saOptionJD.getSeatsSpecification().setMethod(KalmanSmoother)
+        elseif strcmp(eMethod,'Burman')
+        saOptionJD.getSeatsSpecification().setMethod(Burman)
+        else % McElroyMatrix
+        saOptionJD.getSeatsSpecification().setMethod(McElroyMatrix)    
+        end
+            
+        %TramoSeatsSpec=ec.satoolkit.tramoseats.TramoSeatsSpecification();
+        %SeatSpec      =TramoSeatsSpec.getSeatsSpecification()
+ %       SeatSpec.setMethod(KalmanSmoother)
+ %       SeatSpec.setMethod(Burman)
+ %       SeatSpec.setMethod(McElroyMatrix)
+        %--------    
+        
+         rslts = ec.satoolkit.algorithm.implementation. ...
             TramoSeatsProcessingFactory.process(data, saOptionJD);
 end
 
 
+
+%ec.satoolkit.seats.
+% public static enum EstimationMethod {
+%        Burman, KalmanSmoother, McElroyMatrix
+%    }
+    
 
 
 %%  Outliers Identification
@@ -174,7 +211,6 @@ frecuencia = data.getFrequency().intValue() ;
   
 multiplicative=rslts.getData('log',java.lang.Boolean(1).getClass());
  
-
 
 temp = java.lang.Integer(1); % generate a Java integer (output of the function next line)
 nout=  rslts.getData('preprocessing.regression.nout', temp.getClass()); % number of outliers
@@ -229,42 +265,65 @@ if  strcmp(saMethod,'TramoSeats')
     saTsF_lin = rslts.getData('decomposition.sa_lin_f', data.getClass());
     saTsF = rslts.getData('sa_f', data.getClass()); % not corrected for outliers (otherwise the graph is confusing because we dont show the linearlized series)
     saTsF_se = rslts.getData('decomposition.sa_lin_ef', data.getClass()); % the standard errors are only for the linearized series
-    
+    y_ef  = rslts.getData('y_ef', data.getClass()); % the standard errors are only for the linearized series
+
+    ReplaceBy_ef=false; 
+   
+    if isempty(saTsF_se)
+       display(['The model is multimplicative? ' ,string(multiplicative)]) 
+       display(['decomposition.sa_lin_ef is empty']) 
+       ReplaceBy_ef=true;
+     end
+    % take y_ef instead
     saF_lin    = nan(T+horizon,1);     %  initialization with NAN
     saF    = nan(T+horizon,1);     %  initialization with NAN
     saF_se = nan(T+horizon,1);     %  initialization with NAN
     
     
-    if isempty(saTsF_se)
-       display(['The model is multimplicative? ' ,string(multiplicative)]) 
-       display(['decomposition.sa_lin_ef is empty']) 
-    end
+   
     
     
     if multiplicative
         
-        
+        if ReplaceBy_ef
             for i=T:(T+horizon-1)
             saF_lin(i+1,1)= saTsF_lin.get(i-T) ;
-            saF(i+1,1)= saTsF.get(i-T)   ;        
+            saF(i+1,1)= saTsF.get(i-T);        
+            %temp      = y_ef.get(i-T);
+            %saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            saF_se(i+1,1)=y_ef.get(i-T);
+            end
+    
+        else
+            for i=T:(T+horizon-1)
+            saF_lin(i+1,1)= saTsF_lin.get(i-T) ;
+            saF(i+1,1)= saTsF.get(i-T);        
             temp      = saTsF_se.get(i-T);
             %saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
             saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF_lin(i+1,1));
             end
 
+        end
+        
+    else  % non multiplicative
+        
+        
+         if ReplaceBy_ef
+            for i=T:(T+horizon-1)
+            saF(i+1,1)= saTsF.get(i-T);
+           % temp      = saTsF_se.get(i-T);
+           % saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
+            saF_se(i+1,1)=y_ef.get(i-T);
+            end
          
-    
-    else
-        
-        
-            
+         else
             for i=T:(T+horizon-1)
             saF(i+1,1)= saTsF.get(i-T);
            % temp      = saTsF_se.get(i-T);
            % saF_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp,saF(i+1,1));
             saF_se(i+1,1)=saTsF_se.get(i-T);
             end
-         
+         end
             
         
         
@@ -275,9 +334,11 @@ if  strcmp(saMethod,'TramoSeats')
     saTs_se = rslts.getData('decomposition.sa_lin_e', data.getClass());    
     ycalTs = rslts.getData('ycal', data.getClass());
  
+    replaceByZeros=false;
     if isempty(saTs_se)
        display(['The model is multimplicative? ' ,string(multiplicative)]) 
        display(['decomposition.sa_lin_e is empty']) 
+       replaceByZeros=true;
     end
     
     ycal   = nan(T+horizon,1); 
@@ -291,7 +352,16 @@ if  strcmp(saMethod,'TramoSeats')
         
         
          
-        
+        if replaceByZeros
+            for i=0:T-1
+            adj(i+1,1)  =adjusted.get(i);
+            sa(i+1,1)   =saTs.get(i);
+            %temp        =saTs_se.get(i);
+            %sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
+            sa_se(i+1,1)=0;
+            ycal(i+1,1) = (ycalTs.get(i));
+            end        
+        else            
             for i=0:T-1
             adj(i+1,1)  =adjusted.get(i);
             sa(i+1,1)   =saTs.get(i);
@@ -299,7 +369,7 @@ if  strcmp(saMethod,'TramoSeats')
             sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
             ycal(i+1,1) = (ycalTs.get(i));
             end
-        
+        end
     
         adj2  = exp(sa);
         adj2U = adj2 + 2*sa_se;
@@ -313,6 +383,17 @@ if  strcmp(saMethod,'TramoSeats')
     else  % non multiplicative
         
              
+         if replaceByZeros
+            for i=0:T-1
+            adj(i+1,1)  =adjusted.get(i);
+            sa(i+1,1)   =saTs.get(i);
+            %temp        =saTs_se.get(i);
+            %sa_se(i+1,1)=ec.tstoolkit.modelling.arima.LogForecasts.expStdev(temp, sa(i+1,1));
+            sa_se(i+1,1)=0;
+            ycal(i+1,1) =ycalTs.get(i);
+            end
+       
+         else
             for i=0:T-1
             adj(i+1,1)  =adjusted.get(i);
             sa(i+1,1)   =saTs.get(i);
@@ -321,7 +402,9 @@ if  strcmp(saMethod,'TramoSeats')
             sa_se(i+1,1)=saTs_se.get(i);
             ycal(i+1,1) =ycalTs.get(i);
             end
-       
+             
+             
+         end
         
         
         %adj2  = exp(sa);
